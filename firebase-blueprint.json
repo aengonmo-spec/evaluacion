@@ -1,0 +1,307 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Represents an authorized administrator user in the platform.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the administrator.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified email address of the administrator.",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "UID of the admin who granted access.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the admin record was created."
+        }
+      },
+      "required": ["uid", "email", "addedBy", "createdAt"]
+    },
+    "ExamConfig": {
+      "title": "ExamConfig",
+      "description": "Stores the global configuration and active topic for the technical evaluation.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Main title of the evaluation.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Subtitle or certification name.",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "topic": {
+          "type": "string",
+          "description": "Central technical subject/topic of the evaluation.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Instructions and description shown on the welcome screen.",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "timeLimitMinutes": {
+          "type": "integer",
+          "description": "Strict time limit in minutes for the evaluation."
+        },
+        "passingScore": {
+          "type": "integer",
+          "description": "Minimum percentage required to pass the evaluation (1-100)."
+        },
+        "questionCount": {
+          "type": "integer",
+          "description": "Total number of active questions in the bank."
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "UID of the administrator who last updated the configuration.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last configuration update."
+        }
+      },
+      "required": [
+        "title",
+        "subtitle",
+        "topic",
+        "description",
+        "timeLimitMinutes",
+        "passingScore",
+        "questionCount",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "QuestionItem": {
+      "title": "QuestionItem",
+      "description": "A multiple-choice question in the cloud question bank.",
+      "type": "object",
+      "properties": {
+        "order": {
+          "type": "integer",
+          "description": "Display sequence number of the question."
+        },
+        "category": {
+          "type": "string",
+          "description": "Sub-category or competency area of the question.",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "question": {
+          "type": "string",
+          "description": "The question prompt text.",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "optionA": {
+          "type": "string",
+          "description": "Text for Option A.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "optionB": {
+          "type": "string",
+          "description": "Text for Option B.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "optionC": {
+          "type": "string",
+          "description": "Text for Option C.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "optionD": {
+          "type": "string",
+          "description": "Text for Option D.",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "correctIndex": {
+          "type": "integer",
+          "description": "Zero-based index of the correct option (0, 1, 2, or 3)."
+        },
+        "topic": {
+          "type": "string",
+          "description": "Specific study recommendation topic if answered incorrectly.",
+          "minLength": 1,
+          "maxLength": 250
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this question is active in the current evaluation."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "UID of the administrator who created or imported the question.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the question was created or updated."
+        }
+      },
+      "required": [
+        "order",
+        "category",
+        "question",
+        "optionA",
+        "optionB",
+        "optionC",
+        "optionD",
+        "correctIndex",
+        "topic",
+        "active",
+        "authorId",
+        "updatedAt"
+      ]
+    },
+    "ExamSubmission": {
+      "title": "ExamSubmission",
+      "description": "Single-attempt evaluation result submitted by an authenticated student.",
+      "type": "object",
+      "properties": {
+        "studentUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the student.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Full name of the student.",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "studentEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified email address of the student.",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "idDoc": {
+          "type": "string",
+          "description": "National identity document or student ID number.",
+          "minLength": 1,
+          "maxLength": 50,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "examTopic": {
+          "type": "string",
+          "description": "Topic of the evaluation at the time of submission.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "score": {
+          "type": "integer",
+          "description": "Number of correct answers achieved."
+        },
+        "totalQuestions": {
+          "type": "integer",
+          "description": "Total number of questions evaluated."
+        },
+        "percentage": {
+          "type": "integer",
+          "description": "Final percentage score (0-100)."
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the student met or exceeded the passing percentage."
+        },
+        "timeSpentSeconds": {
+          "type": "integer",
+          "description": "Total time spent in seconds."
+        },
+        "timeFormatted": {
+          "type": "string",
+          "description": "Human-readable time spent (e.g. 14m 22s).",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "answersMap": {
+          "type": "object",
+          "description": "Map of questionId to selected option index (0-3)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed"],
+          "description": "Terminal status of the submission.",
+          "minLength": 9,
+          "maxLength": 9
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the exam was submitted."
+        }
+      },
+      "required": [
+        "studentUid",
+        "studentName",
+        "studentEmail",
+        "idDoc",
+        "examTopic",
+        "score",
+        "totalQuestions",
+        "percentage",
+        "passed",
+        "timeSpentSeconds",
+        "timeFormatted",
+        "answersMap",
+        "status",
+        "submittedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Stores authorized administrator UIDs and metadata."
+    },
+    "/examConfig/{configId}": {
+      "schema": { "$ref": "#/entities/ExamConfig" },
+      "description": "Stores the singleton evaluation configuration under document ID 'current'."
+    },
+    "/questions/{questionId}": {
+      "schema": { "$ref": "#/entities/QuestionItem" },
+      "description": "Stores the cloud question bank items for the active evaluation."
+    },
+    "/submissions/{userId}": {
+      "schema": { "$ref": "#/entities/ExamSubmission" },
+      "description": "Stores single-attempt student submissions keyed by studentUid."
+    }
+  }
+}

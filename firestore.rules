@@ -1,0 +1,184 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'aengonmo@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation Blueprints
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['uid', 'email', 'addedBy', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'addedBy', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 150 &&
+        data.addedBy is string && data.addedBy.size() >= 1 && data.addedBy.size() <= 128 && data.addedBy.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.addedBy == request.auth.uid &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidExamConfig(data) {
+      return data.keys().hasAll([
+          'title', 'subtitle', 'topic', 'description',
+          'timeLimitMinutes', 'passingScore', 'questionCount',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'title', 'subtitle', 'topic', 'description',
+          'timeLimitMinutes', 'passingScore', 'questionCount',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.subtitle is string && data.subtitle.size() >= 1 && data.subtitle.size() <= 300 &&
+        data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 200 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 1000 &&
+        data.timeLimitMinutes is int && data.timeLimitMinutes >= 1 && data.timeLimitMinutes <= 240 &&
+        data.passingScore is int && data.passingScore >= 1 && data.passingScore <= 100 &&
+        data.questionCount is int && data.questionCount >= 1 && data.questionCount <= 200 &&
+        data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.updatedBy == request.auth.uid &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidQuestionItem(data) {
+      return data.keys().hasAll([
+          'order', 'category', 'question',
+          'optionA', 'optionB', 'optionC', 'optionD',
+          'correctIndex', 'topic', 'active', 'authorId', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'order', 'category', 'question',
+          'optionA', 'optionB', 'optionC', 'optionD',
+          'correctIndex', 'topic', 'active', 'authorId', 'updatedAt'
+        ]) &&
+        data.order is int && data.order >= 1 && data.order <= 500 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 150 &&
+        data.question is string && data.question.size() >= 1 && data.question.size() <= 1000 &&
+        data.optionA is string && data.optionA.size() >= 1 && data.optionA.size() <= 500 &&
+        data.optionB is string && data.optionB.size() >= 1 && data.optionB.size() <= 500 &&
+        data.optionC is string && data.optionC.size() >= 1 && data.optionC.size() <= 500 &&
+        data.optionD is string && data.optionD.size() >= 1 && data.optionD.size() <= 500 &&
+        data.correctIndex is int && data.correctIndex >= 0 && data.correctIndex <= 3 &&
+        data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 250 &&
+        data.active is bool &&
+        data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128 && data.authorId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.authorId == request.auth.uid &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidExamSubmission(data) {
+      return data.keys().hasAll([
+          'studentUid', 'studentName', 'studentEmail', 'idDoc',
+          'examTopic', 'score', 'totalQuestions', 'percentage',
+          'passed', 'timeSpentSeconds', 'timeFormatted',
+          'answersMap', 'status', 'submittedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'studentUid', 'studentName', 'studentEmail', 'idDoc',
+          'examTopic', 'score', 'totalQuestions', 'percentage',
+          'passed', 'timeSpentSeconds', 'timeFormatted',
+          'answersMap', 'status', 'submittedAt'
+        ]) &&
+        data.studentUid is string && data.studentUid.size() >= 1 && data.studentUid.size() <= 128 && data.studentUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.studentUid == request.auth.uid &&
+        data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 150 &&
+        data.studentEmail is string && data.studentEmail.size() >= 3 && data.studentEmail.size() <= 150 &&
+        data.idDoc is string && data.idDoc.size() >= 1 && data.idDoc.size() <= 50 && data.idDoc.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.examTopic is string && data.examTopic.size() >= 1 && data.examTopic.size() <= 200 &&
+        data.score is int && data.score >= 0 && data.score <= 500 &&
+        data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 500 &&
+        data.percentage is int && data.percentage >= 0 && data.percentage <= 100 &&
+        data.passed is bool &&
+        data.timeSpentSeconds is int && data.timeSpentSeconds >= 0 && data.timeSpentSeconds <= 14400 &&
+        data.timeFormatted is string && data.timeFormatted.size() >= 1 && data.timeFormatted.size() <= 30 &&
+        data.answersMap is map && data.answersMap.size() <= 200 &&
+        data.status is string && data.status.size() == 9 && data.status == 'completed' &&
+        data.submittedAt is timestamp;
+    }
+
+    // 1. Admins Collection
+    match /admins/{adminId} {
+      allow get: if isVerifiedUser() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin() && existing().uid is string;
+      allow create: if isAdmin() && isValidId(adminId) && isValidAdminRecord(incoming()) &&
+        incoming().uid == adminId &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+
+    // 2. Exam Configuration Collection
+    match /examConfig/{configId} {
+      allow get: if isVerifiedUser() && isValidId(configId);
+      allow list: if false;
+      allow create: if isAdmin() && isValidId(configId) && configId == 'current' &&
+        isValidExamConfig(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidExamConfig(incoming()) && isAdmin() && isValidId(configId) && configId == 'current' &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'subtitle', 'topic', 'description',
+          'timeLimitMinutes', 'passingScore', 'questionCount',
+          'updatedBy', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // 3. Questions Bank Collection
+    match /questions/{questionId} {
+      allow get: if isVerifiedUser() && isValidId(questionId) && (existing().active == true || isAdmin());
+      allow list: if isVerifiedUser() && (existing().active == true || isAdmin());
+      allow create: if isAdmin() && isValidId(questionId) &&
+        isValidQuestionItem(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidQuestionItem(incoming()) && isAdmin() && isValidId(questionId) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'order', 'category', 'question',
+          'optionA', 'optionB', 'optionC', 'optionD',
+          'correctIndex', 'topic', 'active', 'authorId', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(questionId);
+    }
+
+    // 4. Student Submissions Collection (Single-Attempt Enforced)
+    match /submissions/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isVerifiedUser() && (existing().studentUid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() && isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidExamSubmission(incoming()) &&
+        incoming().submittedAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+  }
+}
